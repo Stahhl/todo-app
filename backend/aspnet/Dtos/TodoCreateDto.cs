@@ -1,0 +1,1 @@
+public record TodoCreateDto(string title, string description);

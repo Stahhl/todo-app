@@ -1,5 +1,10 @@
 public class Todo
 {
+    public Todo() 
+    { 
+        Title = "";
+        Text = "";
+    }
     public Todo(TodoCreateDto dto)
     {
         Title = dto.title;

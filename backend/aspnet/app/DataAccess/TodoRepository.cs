@@ -1,5 +1,7 @@
 using app.Dtos;
 using app.Models;
+using Dapper;
+using Npgsql;
 
 namespace app.DataAccess;
 
@@ -29,7 +31,11 @@ public class TodoRepository : ITodoRepository
 
     public async Task<IEnumerable<Todo>> GetTodos()
     {
-        throw new NotImplementedException();
+        const string sql = 
+            "select * from todos";
+
+        await using var con = new NpgsqlConnection(_connectionString);
+        return await con.QueryAsync<Todo>(sql); 
     }
 
     public async Task<IEnumerable<Todo>> UpdateOrder(TodoOrderUpdateDto dto)

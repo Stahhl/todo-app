@@ -1,3 +1,4 @@
+using app.DataAccess;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,9 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "aspnet", Version = "v1" });
 });
+
+builder.Services.AddScoped<ITodoRepository>(x => 
+    new TodoRepository(x.GetRequiredService<IConfiguration>().GetConnectionString("Database")));
 
 var app = builder.Build();
 

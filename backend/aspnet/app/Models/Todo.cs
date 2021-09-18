@@ -1,3 +1,7 @@
+using app.Dtos;
+
+namespace app.Models;
+
 public class Todo
 {
     public Todo() 

@@ -16,17 +16,35 @@ public class TodoRepository : ITodoRepository
 
     public async Task<Todo> AddTodo(TodoCreateDto dto)
     {
-        throw new NotImplementedException();
+        var param = new {Title = dto.title, Text = dto.text};
+        const string sql =
+            "insert into todos(title, text) " +
+            "values " +
+            "(@Title, @Text) " + 
+            "returning id, title, text, todoorder, iscomplete";
+
+        await using var con = new NpgsqlConnection(_connectionString);
+        return await con.QueryFirstAsync<Todo>(sql, param);
     }
 
     public async Task<bool> DeleteTodo(Guid id)
     {
-        throw new NotImplementedException();
+        var param = new { Id = id };
+        const string sql = 
+            "delete from todos where id = @Id";
+
+        await using var con = new NpgsqlConnection(_connectionString);
+        return await con.ExecuteAsync(sql, param) == 1;
     }
 
     public async Task<Todo> GetTodo(Guid id)
     {
-        throw new NotImplementedException();
+        var param = new { Id = id };
+        const string sql = 
+            "select * from todos where id = @Id";
+
+        await using var con = new NpgsqlConnection(_connectionString);
+        return await con.QueryFirstAsync<Todo>(sql, param); 
     }
 
     public async Task<IEnumerable<Todo>> GetTodos()

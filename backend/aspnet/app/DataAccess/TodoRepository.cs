@@ -56,9 +56,18 @@ public class TodoRepository : ITodoRepository
         return await con.QueryAsync<Todo>(sql); 
     }
 
-    public async Task<IEnumerable<Todo>> UpdateOrder(TodoOrderUpdateDto dto)
+    public async Task<IEnumerable<Todo>> UpdateOrder(Guid id, TodoOrderUpdateDto dto)
     {
-        throw new NotImplementedException();
+        var param = new { Id = id, NewOrder = dto.newOrder };
+        const string sql = 
+            "update todos set todoorder = @NewOrder where id = @Id";
+
+        await using var con = new NpgsqlConnection(_connectionString);
+
+        if(await con.ExecuteAsync(sql, param) == 1)
+            return await GetTodos();
+
+        return Enumerable.Empty<Todo>();
     }
 
     public async Task<Todo> UpdateTodo(TodoUpdateDto dtp)

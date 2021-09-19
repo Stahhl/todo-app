@@ -27,6 +27,8 @@ BEGIN
             LOOP
                 IF t_row.todoorder >= NEW.todoorder AND t_row.id != NEW.id THEN
                     update todos
+                    -- BUG this seems to be doubling rather than incrementing the value (1 -> 2, 2 -> 4, 4 -> 8)
+                    -- Doesnt really matter... :|
                     set todoorder = todoorder + 1
                     where id = t_row.id;
                 end if;

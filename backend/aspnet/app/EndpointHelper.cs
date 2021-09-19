@@ -21,10 +21,14 @@ public static class EndpointHelper
             return await repo.AddTodo(dto);
         });
 
-
         app.MapDelete("/todos/{id}", async (ITodoRepository repo, Guid id) => 
         {
             return await repo.DeleteTodo(id);
+        });
+
+        app.MapPut("/todos/{id}/order", async (ITodoRepository repo, Guid id, TodoOrderUpdateDto dto) => 
+        {
+            return await repo.UpdateOrder(id, dto);
         });
     }
 }

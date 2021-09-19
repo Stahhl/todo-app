@@ -67,11 +67,20 @@ public class TodoRepository : ITodoRepository
         if(await con.ExecuteAsync(sql, param) == 1)
             return await GetTodos();
 
-        return Enumerable.Empty<Todo>();
+        throw new ArgumentException();
     }
 
-    public async Task<Todo> UpdateTodo(TodoUpdateDto dtp)
+    public async Task<Todo> UpdateTodo(Guid id, TodoUpdateDto dto)
     {
-        throw new NotImplementedException();
+        var param = new { NewTitle = dto.newTitle, NewText = dto.newText, NewIsComplete = dto.newIsComplete, Id = id };
+        const string sql = 
+            "update todos set title = @NewTitle, text = @NewText, isComplete = @NewIsComplete where id = @Id";
+
+        await using var con = new NpgsqlConnection(_connectionString);
+
+        if(await con.ExecuteAsync(sql, param) == 1)
+            return await GetTodo(id);
+
+        throw new ArgumentException();
     }
 }

@@ -1,3 +1,3 @@
 namespace app.Dtos;
 
-public record TodoUpdateDto(string title, string text, bool isComplete);
+public record TodoUpdateDto(string newTitle, string newText, bool newIsComplete);

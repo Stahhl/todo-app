@@ -30,5 +30,10 @@ public static class EndpointHelper
         {
             return await repo.UpdateOrder(id, dto);
         });
+
+        app.MapPut("/todos/{id}", async (ITodoRepository repo, Guid id, TodoUpdateDto dto) => 
+        {
+            return await repo.UpdateTodo(id, dto);
+        });
     }
 }

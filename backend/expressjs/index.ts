@@ -7,7 +7,7 @@ import swaggerUi from "swagger-ui-express";
 // db
 
 const pool = new Pool({
-  connectionString: "postgresql://root:root@host.docker.internal:5432/root"
+  connectionString: "postgresql://root:root@host.docker.internal:5432/root",
 });
 
 // express
@@ -24,16 +24,17 @@ const swaggerOptions = {
       title: "TodoApi",
       description: "TodoApi - ExpressJS",
       contact: {
-        name: "Amazing Developer"
+        name: "Amazing Developer",
       },
-      servers: ["http://localhost:5011"]
-    }
+      servers: ["http://localhost:5011"],
+    },
   },
-  apis: ["index.ts"]
+  apis: ["index.ts"],
 };
 
 const swaggerDocs = swaggerJSDoc(swaggerOptions);
 app.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+app.use(express.json());
 
 // routes
 
@@ -45,7 +46,7 @@ app.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
  *      '200':
  *        description: A successful response
  */
-app.get("/todos", async (req, res) => {
+app.get("/todos", async (req: express.Request, res: express.Response) => {
   pool.query("SELECT * FROM todos", (err, result) => {
     console.log(err, result);
 
@@ -60,18 +61,52 @@ app.get("/todos", async (req, res) => {
  *    parameters:
  *      - in: path
  *        name: id
- *        schema: 
- *          type: string      
+ *        schema:
+ *          type: string
  *    responses:
  *      '200':
  *        description: A successful response
  */
- app.get("/todos/:id", async (req, res) => {
-  pool.query("SELECT * FROM todos WHERE id = $1", [req.params.id], (err, result) => {
+app.get("/todos/:id", async (req: express.Request, res: express.Response) => {
+  const sql = "SELECT * FROM todos WHERE id = $1";
+  pool.query(sql, [req.params.id], (err, result) => {
     console.log(err, result);
 
     res.json(result.rows[0] as Todo);
   });
+});
+
+/**
+ * @swagger
+ * /todos:
+ *  post:
+ *    parameters:
+ *      - in: body
+ *        name: TodoCreateDto
+ *        schema:
+ *          type: object
+ *          properties:
+ *            title:
+ *              type: string
+ *            text:
+ *              type: string
+ *    responses:
+ *      '201':
+ *        description: A successful response
+ */
+app.post("/todos", async (req: express.Request, res: express.Response) => {
+  const param = [req.body.title, req.body.text];
+  const sql =
+    "insert into todos(title, text) " +
+    "values " +
+    "($1, $2) " + 
+    "returning *";
+
+    pool.query(sql, param, (err, result) => {
+      console.log(err, result);
+
+      res.json(result.rows[0] as Todo)
+    });
 });
 
 // start

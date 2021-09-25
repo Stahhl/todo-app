@@ -135,6 +135,41 @@ app.delete(
   }
 );
 
+/**
+ * @swagger
+ * /todos/{id}:
+ *  put:
+ *    parameters:
+ *      - in: path
+ *        name: id
+ *        schema:
+ *          type: string
+ *      - in: body
+ *        name: TodoCreateDto
+ *        schema:
+ *          type: object
+ *          properties:
+ *            newTitle:
+ *              type: string
+ *            newText:
+ *              type: string
+ *            newIsComplete:
+ *              type: boolean
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+app.put("/todos/:id", async (req: express.Request, res: express.Response) => {
+  const param = [req.body.newTitle, req.body.newText, req.body.newIsComplete, req.params.id];
+  const sql = "update todos set title = $1, text = $2, isComplete = $3 where id = $4 returning *";
+
+  pool.query(sql, param, (err, result) => {
+    console.log(err, result);
+
+    res.json(result.rows[0] as Todo);
+  });
+})
+
 // start
 
 app.listen(PORT, () => {

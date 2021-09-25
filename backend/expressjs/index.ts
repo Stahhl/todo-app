@@ -97,17 +97,43 @@ app.get("/todos/:id", async (req: express.Request, res: express.Response) => {
 app.post("/todos", async (req: express.Request, res: express.Response) => {
   const param = [req.body.title, req.body.text];
   const sql =
-    "insert into todos(title, text) " +
-    "values " +
-    "($1, $2) " + 
-    "returning *";
+    "insert into todos(title, text) " + "values " + "($1, $2) " + "returning *";
 
-    pool.query(sql, param, (err, result) => {
+  pool.query(sql, param, (err, result) => {
+    console.log(err, result);
+
+    res.json(result.rows[0] as Todo);
+  });
+});
+
+/**
+ * @swagger
+ * /todos/{id}:
+ *  delete:
+ *    parameters:
+ *      - in: path
+ *        name: id
+ *        schema:
+ *          type: string
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+app.delete(
+  "/todos/:id",
+  async (req: express.Request, res: express.Response) => {
+    const sql = "delete from todos where id = $1";
+    pool.query(sql, [req.params.id], (err, result) => {
       console.log(err, result);
 
-      res.json(result.rows[0] as Todo)
+      if (result.rowCount > 0) {
+        res.send(200);
+      } else {
+        res.send(500);
+      }
     });
-});
+  }
+);
 
 // start
 

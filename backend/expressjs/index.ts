@@ -1,10 +1,9 @@
 import express from "express";
-import { Pool } from "pg";
 import { Todo } from "./models/Todo";
 import swaggerJSDoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
-
-// db
+import { GetAll } from "./TodoRepository";
+import { Pool } from "pg";
 
 const pool = new Pool({
   connectionString: "postgresql://root:root@host.docker.internal:5432/root",
@@ -47,11 +46,8 @@ app.use(express.json());
  *        description: A successful response
  */
 app.get("/todos", async (req: express.Request, res: express.Response) => {
-  pool.query("SELECT * FROM todos", (err, result) => {
-    console.log(err, result);
-
-    res.json(result.rows as Todo[]);
-  });
+  const response = await GetAll(pool);
+  res.json(response);
 });
 
 /**
@@ -160,15 +156,54 @@ app.delete(
  *        description: A successful response
  */
 app.put("/todos/:id", async (req: express.Request, res: express.Response) => {
-  const param = [req.body.newTitle, req.body.newText, req.body.newIsComplete, req.params.id];
-  const sql = "update todos set title = $1, text = $2, isComplete = $3 where id = $4 returning *";
+  const param = [
+    req.body.newTitle,
+    req.body.newText,
+    req.body.newIsComplete,
+    req.params.id,
+  ];
+  const sql =
+    "update todos set title = $1, text = $2, isComplete = $3 where id = $4 returning *";
 
   pool.query(sql, param, (err, result) => {
     console.log(err, result);
 
     res.json(result.rows[0] as Todo);
   });
-})
+});
+
+/**
+ * @swagger
+ * /todos/{id}/order:
+ *  put:
+ *    parameters:
+ *      - in: path
+ *        name: id
+ *        schema:
+ *          type: string
+ *      - in: body
+ *        name: TodoCreateDto
+ *        schema:
+ *          type: object
+ *          properties:
+ *            newOrder:
+ *              type: integer
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ */
+app.put(
+  "/todos/:id/order",
+  async (req: express.Request, res: express.Response) => {
+    const param = [req.body.newOrder, req.params.id];
+    const sql = "update todos set todoorder = $1 where id = $2";
+
+    await pool.query(sql, param);
+
+    const response = await GetAll(pool);
+    res.json(response);
+  }
+);
 
 // start
 

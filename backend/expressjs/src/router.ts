@@ -1,7 +1,6 @@
 import express from "express";
-import { GetAll } from "./TodoRepository";
+import { Create, Delete, GetAll, GetById, Update, UpdateOrder } from "./TodoRepository";
 import { Pool } from "pg";
-import { Todo } from "./models/Todo";
 
 const router = express.Router();
 
@@ -19,7 +18,7 @@ const pool = new Pool({
  */
 router.get("/todos", async (req: express.Request, res: express.Response) => {
   const response = await GetAll(pool);
-  res.json(response);
+  res.status(200).json(response);
 });
 
 /**
@@ -35,14 +34,13 @@ router.get("/todos", async (req: express.Request, res: express.Response) => {
  *      '200':
  *        description: A successful response
  */
-router.get("/todos/:id", async (req: express.Request, res: express.Response) => {
-  const sql = "SELECT * FROM todos WHERE id = $1";
-  pool.query(sql, [req.params.id], (err, result) => {
-    console.log(err, result);
-
-    res.json(result.rows[0] as Todo);
-  });
-});
+router.get(
+  "/todos/:id",
+  async (req: express.Request, res: express.Response) => {
+    const response = await GetById(pool, req.params.id);
+    res.status(200).json(response);
+  }
+);
 
 /**
  * @swagger
@@ -63,15 +61,8 @@ router.get("/todos/:id", async (req: express.Request, res: express.Response) => 
  *        description: A successful response
  */
 router.post("/todos", async (req: express.Request, res: express.Response) => {
-  const param = [req.body.title, req.body.text];
-  const sql =
-    "insert into todos(title, text) " + "values " + "($1, $2) " + "returning *";
-
-  pool.query(sql, param, (err, result) => {
-    console.log(err, result);
-
-    res.json(result.rows[0] as Todo);
-  });
+  const response = await Create(pool, req.body.title, req.body.text);
+  res.status(201).json(response);
 });
 
 /**
@@ -90,16 +81,8 @@ router.post("/todos", async (req: express.Request, res: express.Response) => {
 router.delete(
   "/todos/:id",
   async (req: express.Request, res: express.Response) => {
-    const sql = "delete from todos where id = $1";
-    pool.query(sql, [req.params.id], (err, result) => {
-      console.log(err, result);
-
-      if (result.rowCount > 0) {
-        res.send(200);
-      } else {
-        res.send(500);
-      }
-    });
+    const status = await Delete(pool, req.params.id);
+    res.sendStatus(status);
   }
 );
 
@@ -127,22 +110,19 @@ router.delete(
  *      '200':
  *        description: A successful response
  */
-router.put("/todos/:id", async (req: express.Request, res: express.Response) => {
-  const param = [
-    req.body.newTitle,
-    req.body.newText,
-    req.body.newIsComplete,
-    req.params.id,
-  ];
-  const sql =
-    "update todos set title = $1, text = $2, isComplete = $3 where id = $4 returning *";
-
-  pool.query(sql, param, (err, result) => {
-    console.log(err, result);
-
-    res.json(result.rows[0] as Todo);
-  });
-});
+router.put(
+  "/todos/:id",
+  async (req: express.Request, res: express.Response) => {
+    const response = await Update(
+      pool,
+      req.params.id,
+      req.body.newTitle,
+      req.body.newText,
+      req.body.newIsComplete
+    );
+    res.status(200).json(response);
+  }
+);
 
 /**
  * @swagger
@@ -167,13 +147,8 @@ router.put("/todos/:id", async (req: express.Request, res: express.Response) => 
 router.put(
   "/todos/:id/order",
   async (req: express.Request, res: express.Response) => {
-    const param = [req.body.newOrder, req.params.id];
-    const sql = "update todos set todoorder = $1 where id = $2";
-
-    await pool.query(sql, param);
-
-    const response = await GetAll(pool);
-    res.json(response);
+    const response = await UpdateOrder(pool, req.params.id, req.body.newOrder);
+    res.status(200).json(response);
   }
 );
 

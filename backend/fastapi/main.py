@@ -1,7 +1,8 @@
 import uvicorn
 import databases
-from fastapi import FastAPI, Depends
-# from db import GetDb
+from fastapi import FastAPI, HTTPException
+
+from models import TodoCreateDto
 
 db = databases.Database(
     "postgresql://root:root@host.docker.internal:5432/root")
@@ -33,17 +34,31 @@ async def GetById(id: str):
 
 
 @app.post("/todos")
-def index():
-    return {"message": "Hello World"}
+async def Create(dto: TodoCreateDto):
+    await db.connect()
+    sql = "INSERT INTO todos (title, text) VALUES (:title, :text) returning *"
+    param = {"title": dto.title, "text": dto.text}
+    result = await db.fetch_all(sql, param)
+
+    return result
 
 
 @app.delete("/todos/{id}")
-def index(id: str):
-    return {"message": "Hello World"}
+async def Delete(id: str):
+    await db.connect()
+    sql = "DELETE FROM todos WHERE id = :id RETURNING *"
+    param = {"id": id}
+    result = await db.fetch_val(sql, param)
+    print(result)
+
+    if(result is None):
+        raise HTTPException(status_code=404, detail="Not found")
+    return
 
 
 @app.put("/todos/{id}")
 def index(id: str):
+
     return {"message": "Hello World"}
 
 

@@ -1,8 +1,7 @@
 import uvicorn
 import databases
 from fastapi import FastAPI, HTTPException
-
-from models import TodoCreateDto
+from models import TodoCreateDto, TodoUpdateDto, TodoOrderUpdateDto
 
 db = databases.Database(
     "postgresql://root:root@host.docker.internal:5432/root")
@@ -39,6 +38,7 @@ async def Create(dto: TodoCreateDto):
     sql = "INSERT INTO todos (title, text) VALUES (:title, :text) returning *"
     param = {"title": dto.title, "text": dto.text}
     result = await db.fetch_all(sql, param)
+    await db.disconnect()
 
     return result
 
@@ -49,7 +49,7 @@ async def Delete(id: str):
     sql = "DELETE FROM todos WHERE id = :id RETURNING *"
     param = {"id": id}
     result = await db.fetch_val(sql, param)
-    print(result)
+    await db.disconnect()
 
     if(result is None):
         raise HTTPException(status_code=404, detail="Not found")
@@ -57,14 +57,25 @@ async def Delete(id: str):
 
 
 @app.put("/todos/{id}")
-def index(id: str):
+async def Update(id: str, dto: TodoUpdateDto):
+    await db.connect()
+    sql = "UPDATE todos SET title = :title, text = :text, isComplete = :isComplete WHERE id = :id RETURNING *"
+    param = {"id": id, "title": dto.title, "text": dto.text, "isComplete": dto.isComplete}
+    result = await db.fetch_all(sql, param)
+    await db.disconnect()
 
-    return {"message": "Hello World"}
+    return result
 
 
 @app.put("/todos/{id}/order")
-def index(id: str):
-    return {"message": "Hello World"}
+async def UpdateOrder(id: str, dto: TodoOrderUpdateDto):
+    await db.connect()
+    sql = "UPDATE todos SET todoOrder = :newOrder WHERE id = :id RETURNING *"
+    param = {"id": id, "newOrder": dto.newOrder}
+    result = await db.fetch_all(sql, param)
+    await db.disconnect()
+
+    return result
 
 
 if __name__ == "__main__":

@@ -11,3 +11,11 @@ class Todo(BaseModel):
 class TodoCreateDto(BaseModel):
     title: str
     text: str
+
+class TodoUpdateDto(BaseModel):
+    title: str
+    text: str
+    isComplete: bool
+
+class TodoOrderUpdateDto(BaseModel):
+    newOrder: int
